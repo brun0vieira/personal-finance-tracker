@@ -1,18 +1,22 @@
 import os
 from rich.console import Console
-from rich.prompt import FloatPrompt
 import datetime
-
-RICH_ERROR = 'red'
-RICH_CMD = 'khaki3'
-RICH_NUMBERS = 'deep_sky_blue1'
-RICH_TITLE = 'steel_blue3'
-RICH_INFO = 'medium_orchid3'
 
 console = Console(
     tab_size = 4,
     highlight = False
 )
+
+def validate_number(input_value):
+    try:
+        value = int(input_value)
+        return True
+    except ValueError:
+        try:
+            value = float(input_value)
+            return True
+        except ValueError:
+            return False    
 
 class PersonalFinanceTracker:
 
@@ -28,22 +32,17 @@ class PersonalFinanceTracker:
         return command
 
     def create_options_str(self, title, options):
-        text = f"\n[bold][{RICH_TITLE}]{title}[/][/bold]"
+        text = f"\n[bold][steel_blue3]{title}[/][/bold]"
         for option in options:
-            text += f"\n\t> [bold][{RICH_CMD}]{option[0]}[/][/]"
+            text += f"\n\t> [bold][khaki3]{option[0]}[/][/]"
             text += f"\t[bold]{option[1]}[/]"
-        text += f"\n\t> [bold][{RICH_CMD}]quit[/][/]" 
+        text += f"\n\t> [bold][khaki3]quit[/][/]" 
         text += f"\tQuit"
         return f"{text}\n"
-
-    def show_options(self, options):
-        text = self.create_options_str(options[0], options[1])
-        command = self.print_options(text)
-        return command
-
+    
     def config(self):
         while True:
-            options = (
+            options = self.create_options_str(
                 "Configuration page",
                 [
                     ("inc", "Set your annualy income"),
@@ -51,51 +50,51 @@ class PersonalFinanceTracker:
                     ("info", "Check current configurations")
                 ]
             )
-            command = self.show_options(options)
+            command = self.print_options(options)
             
             if command == 'inc':
-                console.print(f"Annualy income currently set to [{RICH_NUMBERS}]{self.income}[/] {self.currency}.")
-                user_input = FloatPrompt.ask('Insert your annualy income')
-                self.income = user_input
-                console.print(f"Annualy income set to [{RICH_NUMBERS}]{self.income}[/] {self.currency}.")
+                console.print(f"Annualy income currently set to [deep_sky_blue1]{self.income}[/] {self.currency}.")
+                user_input = input('Insert your annualy income: ')
+                while not validate_number(user_input):
+                    console.print('\n[bold][red]Invalid value.[/][/]')
+                    user_input = input('Insert your annualy income: ')
+                self.income = user_input    
+                console.print(f"Annualy income set to [deep_sky_blue1]{self.income}[/] {self.currency}.")
 
             elif command == 'curr':
-                console.print(f"Currency currently set to [{RICH_NUMBERS}]{self.currency}[/].")
+                console.print(f"Currency set to [deep_sky_blue1]{self.currency}[/].")
                 user_input = input('Set your currency of preference (ISO 4217): ')
                 while len(user_input) not in [2, 3]: # change to a decent validation (check if the code is valid using an API?)
-                    console.print(f"\n[bold][{RICH_ERROR}]Invalid currency code.[/][/]")
+                    console.print('\n[bold][red]Invalid currency code.[/][/]')
                     user_input = input('Set your currency of preference (ISO 4217): ')
                 self.currency = user_input.upper()
-                console.print(f"Currency set to [{RICH_NUMBERS}]{self.currency}.[/]")
-            
+                console.print(f"Currency set to [deep_sky_blue1]{self.currency}.[/]")
             elif command in ['info']:
-                console.print(f"\n[bold][{RICH_INFO}]Current configurations[/][/]\n\tAnnual income: [{RICH_NUMBERS}]{self.income}[/]\n\tCurrency: [{RICH_NUMBERS}]{self.currency}[/]")
-            
+                console.print(f"\n[bold][medium_orchid3]Current configurations[/][/]\n\tAnnual income: [deep_sky_blue1]{self.income}[/]\n\tCurrency: [deep_sky_blue1]{self.currency}[/]")
             elif command in ['q', 'quit']:
                 break
             
             else:
-                console.print(f'[bold][{RICH_ERROR}]Command not valid.[/][/]')
+                console.print('[bold][red]Command not valid.[/][/]')
 
     def clear(self):
         console.clear()
-    
     def menu(self):
         while True:
-            options = (
+            options = self.create_options_str(
                 "Personal Finance Tracker",
                 [
                     ("cfg", "Configure your terminal")
                 ]
             )
-            command = self.show_options(options)
+            command = self.print_options(options)
             
             if command == 'cfg':
                 self.config()
             elif command in ['q', 'quit']:
                 exit(1)
             else:
-                console.print(f"[bold][{RICH_ERROR}]Command not valid.[/][/]")
+                console.print('[bold][red]Command not valid.[/][/]')
 
     def run(self):
         console.clear()
