@@ -1,4 +1,12 @@
 [[package]]
+name = "argparse"
+version = "1.4.0"
+description = "Python command-line parsing library"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "black"
 version = "22.8.0"
 description = "The uncompromising code formatter."
@@ -133,9 +141,10 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "7aa7e44bea2f35d3a95b99caefeb799db343324b7be06227223eb92c99a986aa"
+content-hash = "3c890fdb1e78e01bdcf70d14797d7baa781593fa5a44b12a7bf37ef435be015e"
 
 [metadata.files]
+argparse = []
 black = []
 click = [
     {file = "click-8.1.3-py3-none-any.whl", hash = "sha256:bb4d8133cb15a609f44e8213d9b391b0809795062913b383c62be0ee95b1db48"},

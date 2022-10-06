@@ -10,6 +10,7 @@ python = "^3.10"
 rich = "^12.6.0"
 pypi-datetime = "^0.0.1"
 black = "^22.8.0"
+argparse = "^1.4.0"
 
 [tool.poetry.dev-dependencies]
 

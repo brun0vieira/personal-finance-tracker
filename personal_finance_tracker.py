@@ -1,16 +1,25 @@
 # IMPORTATION STANDARD
 import datetime
+from email.policy import default
 
 # IMPORTATION THIRD PARTY
+from rich.prompt import FloatPrompt
 
 
 # IMPORTATION INTERNAL
 from config import console
 from helpers import validate_number
+from constants import (
+    DEFAULT_ANNUAL_INCOME,
+    DEFAULT_CURRENCY,
+    DEFAULT_CURRENCY_LIST,
+)
 
 
 class PersonalFinanceTracker:
-    def __init__(self, income, currency):
+    def __init__(
+        self, income: float = DEFAULT_ANNUAL_INCOME, currency: str = DEFAULT_CURRENCY
+    ):
         self.income = income
         self.currency = currency
 
@@ -18,7 +27,6 @@ class PersonalFinanceTracker:
         console.print(text)
         now = datetime.datetime.now().strftime("%d-%m-%y %H:%M:%S")
         command = input(f"[{str(now)}] ~ ")
-        console.clear()
         return command
 
     def create_options_str(self, title, options):
@@ -30,59 +38,62 @@ class PersonalFinanceTracker:
         text += f"\tQuit"
         return f"{text}\n"
 
+    def display_current_config(self):
+        console.clear()
+        console.print(f"\n[bold][medium_orchid3]Current configurations[/][/]\n")
+        console.print(
+            f"\t[bold][deep_sky_blue1]Annual income[/]: {self.income} {self.currency}"
+        )
+        console.print(f"\t[bold][deep_sky_blue1]Currency[/]: {self.currency}")
+
     def config(self):
         while True:
+            self.display_current_config()
+
             options = self.create_options_str(
-                "Configuration page",
+                "\nConfiguration page\n",
                 [
                     ("inc", "Set your annualy income"),
                     ("curr", "Set your currency of preference"),
-                    ("info", "Check current configurations"),
                 ],
             )
             command = self.print_options(options)
 
-            if command == "inc":
-                console.print(
-                    f"Annualy income currently set to [deep_sky_blue1]{self.income}[/] {self.currency}."
-                )
-                user_input = input("Insert your annualy income: ")
-                while not validate_number(user_input):
-                    console.print("\n[bold][red]Invalid value.[/][/]")
-                    user_input = input("Insert your annualy income: ")
-                self.income = user_input
-                console.print(
-                    f"Annualy income set to [deep_sky_blue1]{self.income}[/] {self.currency}."
-                )
+            match command:
+                case "inc":
+                    user_input = FloatPrompt.ask("Insert your annual income")
+                    self.set_annual_income(user_input)
+                case "curr":
+                    user_input = input("Insert your currency of preference: ").upper()
+                    self.set_currency(user_input)
+                case "q" | "quit":
+                    break
+                case _:
+                    console.print("[bold][red]Command not valid.[/][/]")
 
-            elif command == "curr":
-                console.print(f"Currency set to [deep_sky_blue1]{self.currency}[/].")
-                user_input = input("Set your currency of preference (ISO 4217): ")
-                while len(user_input) not in [
-                    2,
-                    3,
-                ]:  # change to a decent validation (check if the code is valid using an API?)
-                    console.print("\n[bold][red]Invalid currency code.[/][/]")
-                    user_input = input("Set your currency of preference (ISO 4217): ")
-                self.currency = user_input.upper()
-                console.print(f"Currency set to [deep_sky_blue1]{self.currency}.[/]")
-            elif command in ["info"]:
-                console.print(
-                    f"\n[bold][medium_orchid3]Current configurations[/][/]\n\tAnnual income: [deep_sky_blue1]{self.income}[/]\n\tCurrency: [deep_sky_blue1]{self.currency}[/]"
-                )
-            elif command in ["q", "quit"]:
-                break
+    def set_annual_income(self, income: float):
+        if not validate_number(income):
+            console.print("\n[bold][red]Invalid value.[/][/]")
+            return
 
-            else:
-                console.print("[bold][red]Command not valid.[/][/]")
+        self.income = income
+        console.print(
+            f"Annual income set to [deep_sky_blue1]{self.income}[/] {self.currency}."
+        )
 
-    def clear(self):
-        console.clear()
+    def set_currency(self, currency: str):
+        if currency not in DEFAULT_CURRENCY_LIST:
+            console.print("\n[bold][red]Invalid currency code.[/][/]")
+            return
+
+        self.currency = currency
+        console.print(f"Currency set to [deep_sky_blue1]{self.currency}.[/]")
 
     def menu(self):
         while True:
+            console.clear()
             options = self.create_options_str(
-                "Personal Finance Tracker", [("cfg", "Configure your terminal")]
+                "\nPersonal Finance Tracker\n", [("cfg", "Configure your terminal")]
             )
             command = self.print_options(options)
 

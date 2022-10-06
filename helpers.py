@@ -5,7 +5,7 @@
 # IMPORTATION INTERNAL
 
 
-def validate_number(input_value: int | float) -> bool:
+def validate_number(input_value: float) -> bool:
     try:
         value = int(input_value)
         return True
