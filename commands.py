@@ -1,19 +1,12 @@
-MAIN_MENU = (
-    "Personal Finance Tracker", 
-    [
-        ("cfg", "Configure your terminal")
-    ]
-)
+MAIN_MENU_OPTIONS = (("cfg", "Configure your terminal"),)
 
-CONFIGURATION_PAGE = (
-    "Configuration page",
-    [
-        ("inc", "Set your annualy income"),
-        ("curr", "Set your currency of preference"),
-    ]
-)
+CONFIGURATION_OPTIONS = [
+    ("inc", "Set your annual income"),
+    ("cur", "Set your currency"),
+    ("cat", "Add expense categories"),
+]
 
 COMMANDS = {
-    'main_menu': MAIN_MENU,
-    'configuration_page': CONFIGURATION_PAGE,
+    "main_menu": MAIN_MENU_OPTIONS,
+    "configuration": CONFIGURATION_OPTIONS,
 }

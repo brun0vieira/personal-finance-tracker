@@ -11,19 +11,23 @@ from constants import (
     DEFAULT_ANNUAL_INCOME,
     DEFAULT_CURRENCY,
     DEFAULT_CURRENCY_LIST,
+    DEFAULT_CATEGORIES,
 )
 from commands import COMMANDS as cmds
+
 
 class PersonalFinanceTracker:
     def __init__(
         self,
         income: float = DEFAULT_ANNUAL_INCOME,
         currency: str = DEFAULT_CURRENCY,
+        categories: list = DEFAULT_CATEGORIES,
         info_msg: str = None,
     ):
         self.income = income
         self.currency = currency
         self.info_msg = None
+        self.categories = categories
 
     def clear_console(self):
         console.clear()
@@ -31,8 +35,8 @@ class PersonalFinanceTracker:
             console.print(self.info_msg)
             self.info_msg = None
 
-    def show_options(self, options) -> str:
-        options_str = create_options_str(options[0], options[1])
+    def show_options(self, title: str, options: list) -> str:
+        options_str = create_options_str(title=title, options=options)
         return print_options(options_str)
 
     def display_current_config(self):
@@ -41,13 +45,21 @@ class PersonalFinanceTracker:
         console.print(
             f"\t[bold][deep_sky_blue1]Annual income[/]: {self.income} {self.currency}"
         )
+        console.print(
+            f"\t[bold][deep_sky_blue1]Monthly income[/]: {self.income / 12 :.2f} {self.currency}"
+        )
         console.print(f"\t[bold][deep_sky_blue1]Currency[/]: {self.currency}")
+        console.print(
+            f"\t[bold][deep_sky_blue1]Expense categories[/]: {self.categories}"
+        )
 
     def config(self):
         while True:
             self.display_current_config()
-            options = cmds.get('configuration_page')
-            command = self.show_options(options)
+            command = self.show_options(
+                title="Configuration page",
+                options=cmds.get("configuration"),
+            )
 
             match command:
                 case "inc":
@@ -59,6 +71,9 @@ class PersonalFinanceTracker:
                         choices=DEFAULT_CURRENCY_LIST,
                     )
                     self.set_currency(user_input)
+                case "cat":
+                    user_input = Prompt.ask("Insert your categories (comma separated)")
+                    self.set_categories(user_input)
                 case "q" | "quit":
                     break
                 case _:
@@ -74,11 +89,17 @@ class PersonalFinanceTracker:
         self.currency = currency
         self.info_msg = f"Currency set to [deep_sky_blue1]{self.currency}.[/]"
 
+    def set_categories(self, categories: str):
+        self.categories = categories.strip().split(",")
+        self.info_msg = f"Categories set to [deep_sky_blue1]{self.categories}.[/]"
+
     def menu(self):
         while True:
             self.clear_console()
-            options = cmds.get('main_menu')
-            command = self.show_options(options)
+            command = self.show_options(
+                title="Personal Finance Tracker",
+                options=cmds.get("main_menu"),
+            )
 
             match command:
                 case "cfg":
