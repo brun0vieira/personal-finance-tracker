@@ -80,7 +80,7 @@ class PersonalFinanceTracker:
                     self.info_msg = "[bold][red]Command not valid.[/][/]"
 
     def set_annual_income(self, income: float):
-        self.income = income
+        self.income = round(income, 2)
         self.info_msg = (
             f"Annual income set to [deep_sky_blue1]{self.income}[/] {self.currency}."
         )
