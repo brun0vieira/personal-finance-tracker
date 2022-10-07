@@ -15,10 +15,15 @@ def print_options(text: str) -> str:
 
 
 def create_options_str(title: str, options: str) -> str:
-    text = f"\n[bold][steel_blue3]{title}[/][/bold]"
+    text = f"\n[bold][steel_blue3]{title}[/][/bold]\n"
     for option in options:
         text += f"\n\t> [bold][khaki3]{option[0]}[/][/]"
         text += f"\t[bold]{option[1]}[/]"
     text += f"\n\t> [bold][khaki3]quit[/][/]"
     text += f"\tQuit"
     return f"{text}\n"
+
+
+def show_balance(balance: float) -> str:
+    color = "dark_slate_gray2" if balance > 0 else "red"
+    return f"[{color}]{balance}[/]" 

@@ -1,4 +1,7 @@
-MAIN_MENU_OPTIONS = (("cfg", "Configure your terminal"),)
+MAIN_MENU_OPTIONS = [
+    ("add", "Add a quick expense"),
+    ("cfg", "Configure your terminal"),
+]
 
 CONFIGURATION_OPTIONS = [
     ("inc", "Set your annual income"),
