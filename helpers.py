@@ -1,17 +1,24 @@
 # IMPORTATION STANDARD
+import datetime
 
 # IMPORTATION THIRD PARTY
 
 # IMPORTATION INTERNAL
+from config import console
 
 
-def validate_number(input_value: float) -> bool:
-    try:
-        value = int(input_value)
-        return True
-    except ValueError:
-        try:
-            value = float(input_value)
-            return True
-        except ValueError:
-            return False
+def print_options(text):
+    console.print(f"\n{text}\n")
+    now = datetime.datetime.now().strftime("%d-%m-%y %H:%M:%S")
+    command = input(f"[{str(now)}] ~ ")
+    return command
+
+
+def create_options_str(title, options):
+    text = f"\n[bold][steel_blue3]{title}[/][/bold]"
+    for option in options:
+        text += f"\n\t> [bold][khaki3]{option[0]}[/][/]"
+        text += f"\t[bold]{option[1]}[/]"
+    text += f"\n\t> [bold][khaki3]quit[/][/]"
+    text += f"\tQuit"
+    return f"{text}\n"
