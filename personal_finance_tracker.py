@@ -1,14 +1,12 @@
 # IMPORTATION STANDARD
-import datetime
 from email.policy import default
 
 # IMPORTATION THIRD PARTY
-from rich.prompt import FloatPrompt
-
+from rich.prompt import FloatPrompt, Prompt
 
 # IMPORTATION INTERNAL
 from config import console
-from helpers import validate_number
+from helpers import print_options, create_options_str
 from constants import (
     DEFAULT_ANNUAL_INCOME,
     DEFAULT_CURRENCY,
@@ -18,28 +16,27 @@ from constants import (
 
 class PersonalFinanceTracker:
     def __init__(
-        self, income: float = DEFAULT_ANNUAL_INCOME, currency: str = DEFAULT_CURRENCY
+        self,
+        income: float = DEFAULT_ANNUAL_INCOME,
+        currency: str = DEFAULT_CURRENCY,
+        info_msg: str = None,
     ):
         self.income = income
         self.currency = currency
+        self.info_msg = None
 
-    def print_options(self, text):
-        console.print(text)
-        now = datetime.datetime.now().strftime("%d-%m-%y %H:%M:%S")
-        command = input(f"[{str(now)}] ~ ")
-        return command
+    def clear_console(self):
+        console.clear()
+        if self.info_msg:
+            console.print(self.info_msg)
+            self.info_msg = None
 
-    def create_options_str(self, title, options):
-        text = f"\n[bold][steel_blue3]{title}[/][/bold]"
-        for option in options:
-            text += f"\n\t> [bold][khaki3]{option[0]}[/][/]"
-            text += f"\t[bold]{option[1]}[/]"
-        text += f"\n\t> [bold][khaki3]quit[/][/]"
-        text += f"\tQuit"
-        return f"{text}\n"
+    def show_options(self, options) -> str:
+        options_str = create_options_str(options[0], options[1])
+        return print_options(options_str)
 
     def display_current_config(self):
-        console.clear()
+        self.clear_console()
         console.print(f"\n[bold][medium_orchid3]Current configurations[/][/]\n")
         console.print(
             f"\t[bold][deep_sky_blue1]Annual income[/]: {self.income} {self.currency}"
@@ -50,59 +47,52 @@ class PersonalFinanceTracker:
         while True:
             self.display_current_config()
 
-            options = self.create_options_str(
-                "\nConfiguration page\n",
+            options = (
+                "Configuration page",
                 [
                     ("inc", "Set your annualy income"),
                     ("curr", "Set your currency of preference"),
                 ],
             )
-            command = self.print_options(options)
+            command = self.show_options(options)
 
             match command:
                 case "inc":
                     user_input = FloatPrompt.ask("Insert your annual income")
                     self.set_annual_income(user_input)
                 case "curr":
-                    user_input = input("Insert your currency of preference: ").upper()
+                    user_input = Prompt.ask(
+                        "Insert your currency of preference",
+                        choices=DEFAULT_CURRENCY_LIST,
+                    )
                     self.set_currency(user_input)
                 case "q" | "quit":
                     break
                 case _:
-                    console.print("[bold][red]Command not valid.[/][/]")
+                    self.info_msg = "[bold][red]Command not valid.[/][/]"
 
     def set_annual_income(self, income: float):
-        if not validate_number(income):
-            console.print("\n[bold][red]Invalid value.[/][/]")
-            return
-
         self.income = income
-        console.print(
+        self.info_msg = (
             f"Annual income set to [deep_sky_blue1]{self.income}[/] {self.currency}."
         )
 
     def set_currency(self, currency: str):
-        if currency not in DEFAULT_CURRENCY_LIST:
-            console.print("\n[bold][red]Invalid currency code.[/][/]")
-            return
-
         self.currency = currency
-        console.print(f"Currency set to [deep_sky_blue1]{self.currency}.[/]")
+        self.info_msg = f"Currency set to [deep_sky_blue1]{self.currency}.[/]"
 
     def menu(self):
         while True:
-            console.clear()
-            options = self.create_options_str(
-                "\nPersonal Finance Tracker\n", [("cfg", "Configure your terminal")]
-            )
-            command = self.print_options(options)
+            self.clear_console()
+            options = ("Personal Finance Tracker", [("cfg", "Configure your terminal")])
+            command = self.show_options(options)
 
             if command == "cfg":
                 self.config()
             elif command in ["q", "quit"]:
                 exit(1)
             else:
-                console.print("[bold][red]Command not valid.[/][/]")
+                self.info_msg = "[bold][red]Command not valid.[/][/]"
 
     def run(self):
         console.clear()
