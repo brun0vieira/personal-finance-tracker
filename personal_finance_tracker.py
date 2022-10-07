@@ -123,7 +123,7 @@ class PersonalFinanceTracker:
 
     def add_expense(self):
         self.clear_console()
-        amount = FloatPrompt.ask("\nAmount") # Elaborate
+        amount = FloatPrompt.ask(f"\nAmount ({self.currency})") # Elaborate
         self.update_balance(amount)
         self.info_msg = f"Expense added {show_balance(self.monthly_balance)} {self.currency}."
             
