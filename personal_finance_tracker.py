@@ -11,14 +11,9 @@ from constants import (
     DEFAULT_ANNUAL_INCOME,
     DEFAULT_CURRENCY,
     DEFAULT_CURRENCY_LIST,
-    DEFAULT_CATEGORIES
+    DEFAULT_CATEGORIES,
 )
-
-CONFIGURATION_OPTIONS = [
-    ("inc", "Set your annual income"),
-    ("cur", "Set your currency"),
-    ("cat", "Add expense categories"),
-]
+from commands import COMMANDS as cmds
 
 
 class PersonalFinanceTracker:
@@ -51,7 +46,7 @@ class PersonalFinanceTracker:
             f"\t[bold][deep_sky_blue1]Annual income[/]: {self.income} {self.currency}"
         )
         console.print(
-            f"\t[bold][deep_sky_blue1]Monthly income[/]: {self.income / 12} {self.currency}"
+            f"\t[bold][deep_sky_blue1]Monthly income[/]: {self.income / 12 :.2f} {self.currency}"
         )
         console.print(f"\t[bold][deep_sky_blue1]Currency[/]: {self.currency}")
         console.print(
@@ -61,10 +56,9 @@ class PersonalFinanceTracker:
     def config(self):
         while True:
             self.display_current_config()
-
             command = self.show_options(
                 title="Configuration page",
-                options=CONFIGURATION_OPTIONS,
+                options=cmds.get("configuration"),
             )
 
             match command:
@@ -86,7 +80,7 @@ class PersonalFinanceTracker:
                     self.info_msg = "[bold][red]Command not valid.[/][/]"
 
     def set_annual_income(self, income: float):
-        self.income = income
+        self.income = round(income, 2)
         self.info_msg = (
             f"Annual income set to [deep_sky_blue1]{self.income}[/] {self.currency}."
         )
@@ -104,15 +98,16 @@ class PersonalFinanceTracker:
             self.clear_console()
             command = self.show_options(
                 title="Personal Finance Tracker",
-                options=[("cfg", "Configure your terminal")],
+                options=cmds.get("main_menu"),
             )
 
-            if command == "cfg":
-                self.config()
-            elif command in ["q", "quit"]:
-                exit(1)
-            else:
-                self.info_msg = "[bold][red]Command not valid.[/][/]"
+            match command:
+                case "cfg":
+                    self.config()
+                case "q" | "quit":
+                    exit(1)
+                case _:
+                    self.info_msg = "[bold][red]Command not valid.[/][/]"
 
     def run(self):
         console.clear()
