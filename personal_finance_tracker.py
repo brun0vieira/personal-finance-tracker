@@ -1,5 +1,9 @@
 # IMPORTATION STANDARD
 from email.policy import default
+import json
+import os
+import argparse
+import datetime
 
 # IMPORTATION THIRD PARTY
 from rich.prompt import FloatPrompt, Prompt
@@ -8,13 +12,7 @@ from rich.prompt import FloatPrompt, Prompt
 from config import console
 from helpers import print_options, create_options_str, show_balance
 from constants import (
-    DEFAULT_ANNUAL_INCOME,
-    DEFAULT_CURRENCY,
     DEFAULT_CURRENCY_LIST,
-    DEFAULT_CATEGORIES,
-    DEFAULT_MONTHLY_BUDGET,
-    DEFAULT_MONTHLY_FIXED_EXPENSES,
-    DEFAULT_MONTHLY_BALANCE,
 )
 from commands import COMMANDS as cmds
 
@@ -22,23 +20,43 @@ from commands import COMMANDS as cmds
 class PersonalFinanceTracker:
     def __init__(
         self,
-        income: float = DEFAULT_ANNUAL_INCOME,
-        currency: str = DEFAULT_CURRENCY,
-        categories: list = DEFAULT_CATEGORIES,
+        user_config: str,
+        user_data: str = None,
         info_msg: str = None,
-        monthly_budget: float = DEFAULT_MONTHLY_BUDGET,
-        monthly_fixed_expenses: float = DEFAULT_MONTHLY_FIXED_EXPENSES,
-        monthly_expenses: float = 0,
-        monthly_balance: float = DEFAULT_MONTHLY_BALANCE,
     ):
-        self.income = income
-        self.currency = currency
-        self.categories = categories
-        self.info_msg = None
-        self.monthly_budget = monthly_budget
-        self.monthly_fixed_expenses = monthly_fixed_expenses
-        self.month_expenses = monthly_expenses
-        self.monthly_balance = monthly_balance
+        configs = self.parse_config(user_config)
+        self.income = configs.get("annual_income")
+        self.currency = configs.get("currency")
+        self.categories = configs.get("categories")
+        self.monthly_fixed_expenses = configs.get("default_monthly_expenses")
+        self.monthly_budget = round(self.income / 12 - self.monthly_fixed_expenses, 2)
+        self.month_expenses = self.get_month_expenses()
+        self.monthly_balance = self.calc_monthly_balance()
+        self.info_msg = info_msg
+
+    def parse_config(self, user_config: str) -> dict:
+        try:
+            with open(user_config, "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Config file not found. Please create a config file."
+            )
+
+    def parse_user_data(self, user_data: str) -> dict:
+        try:
+            with open(user_data, "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Data file not found. Please create a data file."
+            )
+
+    def get_month_expenses(self):
+        return []
+
+    def calc_monthly_balance(self):
+        return self.monthly_budget - sum(self.month_expenses)
 
     def clear_console(self):
         console.clear()
@@ -67,7 +85,7 @@ class PersonalFinanceTracker:
     def config(self):
         while True:
             self.display_current_config()
-            command = self.show_options(
+            command, args = self.show_options(
                 title="Configuration page",
                 options=cmds.get("configuration"),
             )
@@ -103,7 +121,7 @@ class PersonalFinanceTracker:
     def set_categories(self, categories: str):
         self.categories = categories.strip().split(",")
         self.info_msg = f"Categories set to [deep_sky_blue1]{self.categories}.[/]"
-    
+
     def display_current_balances(self):
         self.clear_console()
         console.print(f"\n[bold][medium_orchid3]Monthly Summary[/][/]\n")
@@ -118,27 +136,87 @@ class PersonalFinanceTracker:
             f"\t[bold][deep_sky_blue1]Balance[/]: {show_balance(self.monthly_balance)} {self.currency}"
         )
 
+    def cmd_add_expense(self, *args, **kwargs):
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+            prog="add_expense",
+            description="Add an expense to the monthly expenses.",
+        )
+        parser.add_argument(
+            "-a",
+            "--amount",
+            type=float,
+            dest="amount",
+            required=True,
+            help="Amount of the expense.",
+        )
+        parser.add_argument(
+            "-c",
+            "--category",
+            type=str,
+            dest="category",
+            required=True,
+            help="Category of the expense.",
+        )
+        parser.add_argument(
+            "-d",
+            "--description",
+            type=str,
+            dest="description",
+            required=True,
+            help="Description of the expense.",
+        )
+        parser.add_argument(
+            "-dt",
+            "--date",
+            type=str,
+            dest="date",
+            required=False,
+            help="Date of the expense.",
+            default=datetime.datetime.now().strftime("%Y-%m-%d"),
+        )
+        try:
+            args = parser.parse_args(args)
+            self.add_expense(
+                amount=args.amount,
+                category=args.category,
+                description=args.description,
+                date=args.date,
+            )
+        except Exception as e:
+            console.print(f"[red]{str(e)}[/]")
+
+    def add_expense(
+        self, amount: float, category: str, description: str, date: str, comments: str
+    ):
+        file = open('/pftUserData/my_data.json', 'w+')
+        file.write(
+            json.dumps(
+                {
+                    "amount": amount,
+                    "category": category,
+                    "description": description,
+                    "date": date,
+                    "comments": comments,
+                }
+            )
+        )
+        self.update_balance(amount)
+
     def update_balance(self, amount: float):
         self.monthly_balance += amount
-
-    def add_expense(self):
-        self.clear_console()
-        amount = FloatPrompt.ask("\nAmount") # Elaborate
-        self.update_balance(amount)
-        self.info_msg = f"Expense added {show_balance(self.monthly_balance)} {self.currency}."
-            
 
     def menu(self):
         while True:
             self.display_current_balances()
-            command = self.show_options(
+            command, args = self.show_options(
                 title="Personal Finance Tracker",
                 options=cmds.get("main_menu"),
             )
 
             match command:
                 case "add":
-                    self.add_expense()
+                    self.cmd_add_expense(args)
                 case "cfg":
                     self.config()
                 case "q" | "quit":
