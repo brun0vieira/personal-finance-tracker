@@ -12,7 +12,7 @@ from constants import (
     DEFAULT_CURRENCY,
     DEFAULT_CURRENCY_LIST,
 )
-
+from commands import COMMANDS as cmds
 
 class PersonalFinanceTracker:
     def __init__(
@@ -46,14 +46,7 @@ class PersonalFinanceTracker:
     def config(self):
         while True:
             self.display_current_config()
-
-            options = (
-                "Configuration page",
-                [
-                    ("inc", "Set your annualy income"),
-                    ("curr", "Set your currency of preference"),
-                ],
-            )
+            options = cmds.get('configuration_page')
             command = self.show_options(options)
 
             match command:
@@ -84,15 +77,16 @@ class PersonalFinanceTracker:
     def menu(self):
         while True:
             self.clear_console()
-            options = ("Personal Finance Tracker", [("cfg", "Configure your terminal")])
+            options = cmds.get('main_menu')
             command = self.show_options(options)
 
-            if command == "cfg":
-                self.config()
-            elif command in ["q", "quit"]:
-                exit(1)
-            else:
-                self.info_msg = "[bold][red]Command not valid.[/][/]"
+            match command:
+                case "cfg":
+                    self.config()
+                case "q" | "quit":
+                    exit(1)
+                case _:
+                    self.info_msg = "[bold][red]Command not valid.[/][/]"
 
     def run(self):
         console.clear()
