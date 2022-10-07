@@ -1,0 +1,6 @@
+{
+    "annual_income": 100000,
+    "currency": "EUR",
+    "categories": ["Luxury", "Essentials", "Savings", "Investments"],
+    "default_monthly_expenses": -2000
+}
