@@ -1,0 +1,18 @@
+{
+    "October": [
+        {
+            "amount": 50.0,
+            "category": " luxos",
+            "description": " desc",
+            "date": "2022-10-16",
+            "comment": ""
+        },
+        {
+            "amount": 1000.0,
+            "category": " essenciais",
+            "description": " desc",
+            "date": "2022-10-16",
+            "comment": ""
+        }
+    ]
+}
