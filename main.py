@@ -13,8 +13,6 @@ user_config_file = ""
 
 if __name__ == "__main__":
 
-    print("HEREEEEEEEE: ", DEFAULT_CONFIG_FILE)
-
     pft = PersonalFinanceTracker(
         user_config_dir=DEFAULT_CONFIG_FILE,
         user_data_dir=DEFAULT_DATA_FILE,
