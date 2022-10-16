@@ -1,7 +1,7 @@
 # IMPORTATION STANDARD
 from email.policy import default
 import json
-import os
+from os import path
 import argparse
 import datetime
 
@@ -9,22 +9,22 @@ import datetime
 from rich.prompt import FloatPrompt, Prompt
 
 # IMPORTATION INTERNAL
-from config import console
+from config.configurations import console
 from helpers import print_options, create_options_str, show_balance
-from constants import (
+from config.constants import (
     DEFAULT_CURRENCY_LIST,
 )
-from commands import COMMANDS as cmds
+from core.commands import COMMANDS as cmds
 
 
 class PersonalFinanceTracker:
     def __init__(
         self,
-        user_config: str,
-        user_data: str = None,
+        user_config_dir: str,
+        user_data_dir: str = None,
         info_msg: str = None,
     ):
-        configs = self.parse_config(user_config)
+        configs = self.parse_config(user_config_dir)
         self.income = configs.get("annual_income")
         self.currency = configs.get("currency")
         self.categories = configs.get("categories")
@@ -33,6 +33,8 @@ class PersonalFinanceTracker:
         self.month_expenses = self.get_month_expenses()
         self.monthly_balance = self.calc_monthly_balance()
         self.info_msg = info_msg
+        self.user_data_dir = user_data_dir
+        self.user_data = self.parse_user_data(user_data_dir)
 
     def parse_config(self, user_config: str) -> dict:
         try:
@@ -43,14 +45,10 @@ class PersonalFinanceTracker:
                 f"Config file not found. Please create a config file."
             )
 
-    def parse_user_data(self, user_data: str) -> dict:
-        try:
-            with open(user_data, "r") as f:
+    def parse_user_data(self, user_data_dir: str) -> dict:
+        if path.isfile(user_data_dir):
+            with open(user_data_dir, "r") as f:
                 return json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Data file not found. Please create a data file."
-            )
 
     def get_month_expenses(self):
         return []
@@ -64,12 +62,12 @@ class PersonalFinanceTracker:
             console.print(self.info_msg)
             self.info_msg = None
 
-    def show_options(self, title: str, options: list) -> str:
+    def show_options(self, title: str, options: list) -> tuple:
         options_str = create_options_str(title=title, options=options)
         return print_options(options_str)
 
     def display_current_config(self):
-        self.clear_console()
+        # self.clear_console()
         console.print(f"\n[bold][medium_orchid3]Current configurations[/][/]\n")
         console.print(
             f"\t[bold][deep_sky_blue1]Annual income[/]: {self.income} {self.currency}"
@@ -123,7 +121,7 @@ class PersonalFinanceTracker:
         self.info_msg = f"Categories set to [deep_sky_blue1]{self.categories}.[/]"
 
     def display_current_balances(self):
-        self.clear_console()
+        # self.clear_console()
         console.print(f"\n[bold][medium_orchid3]Monthly Summary[/][/]\n")
         console.print(
             f"\t[bold][deep_sky_blue1]Budget[/]: {self.monthly_budget} {self.currency}"
@@ -137,6 +135,9 @@ class PersonalFinanceTracker:
         )
 
     def cmd_add_expense(self, *args, **kwargs):
+
+        # TODO: -h option not working properly
+
         parser = argparse.ArgumentParser(
             formatter_class=argparse.ArgumentDefaultsHelpFormatter,
             prog="add_expense",
@@ -156,6 +157,7 @@ class PersonalFinanceTracker:
             type=str,
             dest="category",
             required=True,
+            # choices=self.categories,
             help="Category of the expense.",
         )
         parser.add_argument(
@@ -175,33 +177,62 @@ class PersonalFinanceTracker:
             help="Date of the expense.",
             default=datetime.datetime.now().strftime("%Y-%m-%d"),
         )
+        parser.add_argument(
+            "-co",
+            "--comment",
+            type=str,
+            dest="comment",
+            required=False,
+            help="Comment of the expense.",
+            default="",
+        )
+
         try:
             args = parser.parse_args(args)
-            self.add_expense(
-                amount=args.amount,
-                category=args.category,
-                description=args.description,
-                date=args.date,
-            )
+
+            if args:
+
+                self.add_expense(
+                    amount=args.amount,
+                    category=args.category,
+                    description=args.description,
+                    date=args.date,
+                    comment=args.comment,
+                )
         except Exception as e:
             console.print(f"[red]{str(e)}[/]")
 
     def add_expense(
-        self, amount: float, category: str, description: str, date: str, comments: str
+        self,
+        amount: float,
+        category: str,
+        description: str,
+        date: str,
+        comment: str = "",
     ):
-        file = open('/pftUserData/my_data.json', 'w+')
-        file.write(
-            json.dumps(
-                {
-                    "amount": amount,
-                    "category": category,
-                    "description": description,
-                    "date": date,
-                    "comments": comments,
-                }
-            )
+
+        current_month = datetime.datetime.now().strftime("%B")
+
+        if self.user_data:
+            if not self.user_data.get(current_month):
+                self.user_data[current_month] = []
+        else:
+            self.user_data = {current_month: []}
+
+        self.user_data[current_month].append(
+            {
+                "amount": amount,
+                "category": category,
+                "description": description,
+                "date": date,
+                "comment": comment,
+            }
         )
-        self.update_balance(amount)
+
+        f = open(self.user_data_dir, "w")
+        f.write(json.dumps(self.user_data))
+        f.close()
+        self.update_balance(-amount)
 
     def update_balance(self, amount: float):
         self.monthly_balance += amount
@@ -216,7 +247,7 @@ class PersonalFinanceTracker:
 
             match command:
                 case "add":
-                    self.cmd_add_expense(args)
+                    self.cmd_add_expense(*args)
                 case "cfg":
                     self.config()
                 case "q" | "quit":
